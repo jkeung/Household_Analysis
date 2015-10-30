@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 
+
 FILES = ['ss13husa.csv', 'ss13husb.csv']
 OUTPUT = 'households.p'
 
