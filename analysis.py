@@ -373,3 +373,74 @@ def test_logistic_regression_c_parameter(params, X_train, X_test, y_train, y_tes
     plt.legend((tr, ts), ('Training Accuracy', 'Test Accuracy'), loc = 'best')
     plt.xlabel('C')
     plt.ylabel('Accuracy')
+
+def plot_ROC_curve(model, X_train, X_test, y_train, y_test):
+
+    """
+    Function to plot an ROC curve
+    """
+    
+    # Model Metrics
+    print model
+    print "*************************** Model Metrics *********************************"
+    print 'Accuracy: %s' % cross_val_score(model, X_train, y_train, scoring = 'accuracy', cv = 5).mean()
+    print 'Precision: %s' % cross_val_score(model, X_train, y_train, scoring = 'precision', cv = 5).mean()
+    print 'Recall: %s' % cross_val_score(model, X_train, y_train, scoring = 'recall_weighted', cv = 5).mean()
+    print 'F1: %s' % cross_val_score(model, X_train, y_train, scoring = 'f1', cv = 5).mean()
+
+    fitted = model.fit(X_train, y_train)
+    try:
+        y_score = fitted.predict_proba(X_test)[:,1]
+    except:
+        y_score = fitted.decision_function(X_test)
+  
+    # Confusion matrix
+    print "********************* Normalized Confusion Matrix *************************"
+    cm = confusion_matrix(y_test, fitted.predict(X_test))
+    cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+    
+    print('Normalized confusion matrix')
+    print(cm_normalized)
+    plt.matshow(cm, cmap=plt.cm.Blues)
+    plt.colorbar()
+    plt.xlabel('Predicted Values')
+    plt.ylabel('Actual Values')
+    
+    # Classification Report
+    print "********************* Classification Report********************************"    
+    print classification_report(y_test, fitted.predict(X_test))
+    
+    print "********************* ROC Curve *******************************************"
+    
+    # ROC Curve
+    fpr, tpr, _ = roc_curve(y_test, y_score)
+    roc_auc = auc(fpr, tpr)
+    
+    plt.figure()
+    plt.plot(fpr, tpr, label='ROC curve (area = %0.2f)' % roc_auc)
+    plt.plot([0, 1], [0, 1], 'k--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver operating characteristic')
+    plt.legend(loc="lower right")
+    plt.show()
+    
+def plot_learning_curve(model, X_train, X_test, y_train, y_test):
+    
+    """
+    Function to plot a learning curve
+    """
+
+    m, train_scores, valid_scores = learning_curve(estimator = model, 
+                                                   X = X_train, y = y_train.ravel(), train_sizes = np.linspace(0.1,1.0, 80))
+
+    train_cv_err = np.mean(train_scores, axis=1)
+    test_cv_err = np.mean(valid_scores, axis=1)
+    tr, = plt.plot(m, train_cv_err)
+    ts, = plt.plot(m, test_cv_err)
+    plt.legend((tr, ts), ('training error', 'test error'), loc = 'best')
+    plt.title('Learning Curve')
+    plt.xlabel('Data Points')
+    plt.ylabel('Accuracy')
